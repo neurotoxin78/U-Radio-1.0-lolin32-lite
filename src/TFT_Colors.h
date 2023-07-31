@@ -24,29 +24,32 @@
 //#define TFT_SILVER      0xC618      /* 192, 192, 192 */
 //#define TFT_SKYBLUE     0x867D      /* 135, 206, 235 */
 //#define TFT_VIOLET      0x915C      /* 180,  46, 226 */
+#define TFT_LIGHT_ORANGE   0xfce0
+#define TFT_DEEP_GRAY 0x52aa
 
-#define COLOR_BACKGROUND      TFT_BLACK
-#define COLOR_FRAME           TFT_BLACK     //// TFT_LIGHTGREY
-#define COLOR_BUTTON_BG       TFT_DARKGREY  ////TFT_MAROON
-#define COLOR_BUTTON_ON1      TFT_PINK
-#define COLOR_BUTTON_ON2      TFT_DARKCYAN
-#define COLOR_BUTTON_TEXT     TFT_BLACK
-#define COLOR_BUTTON_TEMP     TFT_RED
-#define COLOR_BUTTON_SEND     TFT_ORANGE
-#define COLOR_INDICATOR_FREQ  TFT_WHITE
-#define COLOR_INDICATOR_TXT1  TFT_GREEN
-#define COLOR_INDICATOR_TXT2  TFT_RED
-#define COLOR_INDICATOR_TXT3  TFT_ORANGE
-#define COLOR_PANEL_TEXT      TFT_WHITE
-#define COLOR_RDS_TEXT        TFT_GREEN
-#define COLOR_RSMTRF          TFT_RED
-#define COLOR_RSMTRB          TFT_BLACK
-#define COLOR_SNRMTRF         TFT_SKYBLUE
-#define COLOR_SNRMTRB         TFT_BLACK
-#define COLOR_MULTMTRF        TFT_GREENYELLOW
-#define COLOR_MULTMTRB        TFT_BLACK
-#define COLOR_BLNDMTRF        TFT_BLUE
-#define COLOR_BLNDMTRB        TFT_BLACK
-#define COLOR_VOLF            TFT_ORANGE
-#define COLOR_VOLB            TFT_BLACK
-#define COLOR_BFO             TFT_ORANGE
+#define COLOR_BACKGROUND            TFT_BLACK
+#define COLOR_FRAME                 TFT_LIGHTGREY
+#define COLOR_BUTTON_BG             TFT_SKYBLUE
+#define COLOR_BUTTON_ON1            TFT_PINK
+#define COLOR_BUTTON_ON2            TFT_SKYBLUE
+#define COLOR_BUTTON_TEXT           TFT_GREENYELLOW
+#define COLOR_BUTTON_TEMP           TFT_RED
+#define COLOR_BUTTON_SEND           TFT_ORANGE
+#define COLOR_INDICATOR_FREQ        TFT_SKYBLUE
+#define COLOR_INDICATOR_FREQ_BACK   TFT_DEEP_GRAY
+#define COLOR_INDICATOR_TXT1        TFT_GREEN
+#define COLOR_INDICATOR_TXT2        TFT_RED
+#define COLOR_INDICATOR_TXT3        TFT_ORANGE
+#define COLOR_PANEL_TEXT            TFT_SKYBLUE
+#define COLOR_RDS_TEXT              TFT_SKYBLUE
+#define COLOR_RSMTRF                TFT_RED
+#define COLOR_RSMTRB                TFT_BLACK
+#define COLOR_SNRMTRF               TFT_SKYBLUE
+#define COLOR_SNRMTRB               TFT_BLACK
+#define COLOR_MULTMTRF              TFT_GREENYELLOW
+#define COLOR_MULTMTRB              TFT_BLACK
+#define COLOR_BLNDMTRF              TFT_BLUE
+#define COLOR_BLNDMTRB              TFT_BLACK
+#define COLOR_VOLF                  TFT_ORANGE
+#define COLOR_VOLB                  TFT_BLACK
+#define COLOR_BFO                   TFT_ORANGE

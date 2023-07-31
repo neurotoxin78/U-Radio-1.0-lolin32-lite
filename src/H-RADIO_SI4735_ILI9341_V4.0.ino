@@ -82,6 +82,7 @@
 #define ENCODER_PIN_B    GPIO_NUM_33
 #define ENCODER_SWITCH   GPIO_NUM_25
 #define BAT_INFO         GPIO_NUM_26
+#define BAT_COOF         1878 // 2047
 #define BEEPER           GPIO_NUM_35
 #define DISPLAY_LED      GPIO_NUM_12
 #define AUDIO_MUTE       GPIO_NUM_13
@@ -91,11 +92,11 @@
 // Rotate 0   // vertical   0 // Calibration code for touchscreen : for 2.8 inch // { 387, 3530, 246, 3555, 4 }
 // Rotate 90  // horizontal 1 // Calibration code for touchscreen : for 2.8 inch // { 387, 3530, 246, 3555, 7 }
 // Rotate 180 // vertical   2 // Calibration code for touchscreen : for 2.8 inch // { 258, 3566, 413, 3512, 2 }
-//Rotate 270 // horizontal 3 // Calibration code for touchscreen : for 2.8 inch // { 387, 3530, 246, 3555, 1 }
-#define SCREEN_V      1
+// Rotate 270 // horizontal 3 // Calibration code for touchscreen : for 2.8 inch // { 387, 3530, 246, 3555, 1 }
+#define SCREEN_V      0
 #define SCREEN_H      1
 uint16_t calDataV[5] = { 258, 3566, 413, 3512, 4 };
-uint16_t calDataH[5] = { 265, 3790, 264, 3850, 1 }; //
+uint16_t calDataH[5] = { 387, 3530, 246, 3555, 7 };
 // =================================================
 
 // ==================Oscillator=====================
@@ -494,7 +495,7 @@ const int LedResol         = 8;
 const int LedChannelforTFT = 0;
 uint16_t currentBrightness;
 uint16_t previousBrightness = 65535;
-uint16_t MaxBrightness     = 255;
+uint16_t MaxBrightness     = 30;
 uint16_t MinBrightness     = 256;
 uint8_t stepsizesynth      = 10;
 
@@ -925,15 +926,15 @@ void setup() {
   digitalWrite(DISPLAY_LED, 1);
   //Wire.begin(ESP32_I2C_SDA, ESP32_I2C_SCL); //I2C for SI4735
 
-  ledcSetup(LedChannelforTFT, LedFreq, LedResol);
-  ledcAttachPin(DISPLAY_LED, LedChannelforTFT);
+  //ledcSetup(LedChannelforTFT, LedFreq, LedResol);
+  //ledcAttachPin(DISPLAY_LED, LedChannelforTFT);
 
   int16_t si4735Addr = si4735.getDeviceI2CAddress(RESET_PIN);
   Beep(1, 200);
   tft.init();
   
   // Calibration code for touchscreen : for 2.8 inch & Rotation = 1
-  tft.setRotation(7);
+  tft.setRotation(1);
   uint16_t calData[5] = { 387, 3530, 246, 3555, 7 };
   tft.setTouch(calData);
 
@@ -964,23 +965,23 @@ void setup() {
   tft.setTextSize(2);
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
 
-  Serial.println("     SI4735/32 Radio");
-  Serial.println("Version 4.0 23-02-2022");
+  Serial.println("U-Radio SI4735/32");
+  Serial.println("Version 1.1 30-07-2023");
 
-  spr.createSprite(265, 120);
-  spr.fillScreen(COLOR_BACKGROUND);
-  spr.pushImage(0, 0, 265, 120, (uint16_t *)logo);
-  spr.pushSprite(27, 120);
-  spr.deleteSprite();
+  //spr.createSprite(265, 120);
+  //spr.fillScreen(COLOR_BACKGROUND);
+  //spr.pushImage(0, 0, 265, 120, (uint16_t *)logo);
+  //spr.pushSprite(27, 120);
+  //spr.deleteSprite();
   
-  tft.println("SI4735/32  Radio");
+  tft.println("U-Radio SI4735/32");
   tft.setCursor(7, 70);
-  tft.println(" Version 4.0");
+  tft.println(" Version 1.1");
   tft.setCursor(7, 95);
-  tft.println(" 23-02-2022");
+  tft.println(" 30-07-2023");
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.setCursor(7, 120);
-  tft.println(" Binns MOD nul@bk.ru");
+  tft.println("Neuro Mod neuro@abz.kiev.ua");
   tft.setTextColor(TFT_CYAN, TFT_BLACK);
   tft.setTextSize(1);
   tft.setCursor(0, 220);
@@ -1172,7 +1173,7 @@ void setup() {
   if (bandIdx != 0) si4735.setAM();
 #endif
 
-  if (!displayPower) ledcWrite(LedChannelforTFT, currentBrightness);
+  //if (!displayPower) ledcWrite(LedChannelforTFT, currentBrightness);
   freqstep = 1000;//hz
   previousBFO = -1;
   band[bandIdx].lastBFO  = currentBFO;
@@ -1606,7 +1607,7 @@ void Smeter() {
 //=======================================================================================
 void Battery() { //battery info
   //=======================================================================================
-  float vsupply = 3.324 * analogRead(BAT_INFO) / 2047; //3.3v
+  float vsupply = 3.324 * analogRead(BAT_INFO) / BAT_COOF; //3.3v
   int bat = map(int(vsupply * 100), 270, 405, 0, 100);
   if ((FirstLayer or ThirdLayer) and ((elapsedBat + 10000) < millis())) {
     if (bat < 0) bat = 0;
@@ -1666,7 +1667,14 @@ void saver() {
   float freq;
   tft.fillScreen(TFT_BLACK);
   if (displayOff) {
-    if (displayPower) digitalWrite(DISPLAY_LED, 1); else ledcWrite(LedChannelforTFT, MinBrightness);
+    digitalWrite(DISPLAY_LED, 0);
+    /*if (displayPower) {
+         digitalWrite(DISPLAY_LED, 1);
+    } else {
+      //digitalWrite(DISPLAY_LED, 1);
+      ledcWrite(LedChannelforTFT, MinBrightness);
+    }*/
+    Serial.println("Saver: TFT led Off");
   }
   if (saverOn) {
     Saver = true;
@@ -1714,7 +1722,7 @@ void saver() {
           int bat = map(int(vsupply * 100), 270, 405, 0, 100);
           if (bat < 0) bat = 0;
           if (bat > 100) bat = 100;
-          int colorBatt = TFT_DARKCYAN;
+          int colorBatt = TFT_BROWN;
           if (bat < 15) colorBatt = TFT_ORANGE;
           if (bat < 5) colorBatt = 64528;
           tft.drawRect(saverX + 145, saverY, 38, 18, colorBatt);
@@ -1736,7 +1744,7 @@ void saver() {
   encoderCount = 0;
   encoderButton = 0;
   if (displayOff) {
-    if (displayPower) digitalWrite(DISPLAY_LED, 0); else ledcWrite(LedChannelforTFT, currentBrightness);
+    if (displayPower) digitalWrite(DISPLAY_LED, 1); //else ledcWrite(LedChannelforTFT, currentBrightness);
   }
   returnLayer();
   elapsedSaver = millis();
@@ -1797,11 +1805,11 @@ void returnLayer() {
     DrawSCANtxt(true);
   }
   if (PRESbut) {
-    tft.fillRect(XFreqDispl, YFreqDispl + 20 , 239, 65, TFT_DARKCYAN);
+    tft.fillRect(XFreqDispl, YFreqDispl + 20 , 239, 65, TFT_DARKGREY);
     drawButton(L_THIRD, B_FM, B_SELECT);
     tft.setTextSize(1);
     tft.setTextDatum(BL_DATUM);
-    tft.setTextColor(TFT_WHITE, TFT_DARKCYAN );
+    tft.setTextColor(TFT_WHITE, TFT_DARKGREY );
     tft.drawString(String(preset[currentPRES].presetIdx, 2) + " MHz ", 5, 83);
     if (!directScroll) {
       tftRusSetFont(T1516_T);
@@ -1886,7 +1894,7 @@ void loop() {
         textScroll += directScroll;
         tftRusSetFont(T1516_T);
         tftRusSetSize(1);
-        tftRusSetColor(TFT_WHITE, TFT_DARKCYAN);
+        tftRusSetColor(TFT_WHITE, TFT_DARKGREY);
         tftRusSetDatum(BC_T);
         tftRusSetStyle(NBL_T);
         tftRusSetCut(textScroll, 18);
@@ -1914,7 +1922,7 @@ void loop() {
         int d = !screenV * 40;
         tftRusSetDatum(BL_T);
         tftRusSetFont(T1516_T);
-        tftRusSetColor(TFT_WHITE, TFT_DARKCYAN);
+        tftRusSetColor(TFT_WHITE, TFT_BROWN);
         tftRusSetStyle(NBL_T);
         tftRusWidth = 12;
         if (!charMemoName) charMemoName = 32;
@@ -2993,7 +3001,7 @@ void loop() {
               bool flag = false;
               for (int i = 0; i <= lastPreset; i++) if ((preset[i].presetIdx * 100) >= band[0].minimumFreq and (preset[i].presetIdx * 100) <= band[0].maximumFreq) flag = true;
               if (flag) {
-                tft.fillRect(XFreqDispl, YFreqDispl + 20 , 239, 65, TFT_DARKCYAN);
+                tft.fillRect(XFreqDispl, YFreqDispl + 20 , 239, 65, TFT_DARKGREY);
                 previousPRES = -1;
                 previousFrequency = 0;
               } else {
@@ -3249,10 +3257,10 @@ void loop() {
     while ((preset[currentPRES].presetIdx * 100) < band[0].minimumFreq or (preset[currentPRES].presetIdx * 100) > band[0].maximumFreq) currentPRES++;
       
     previousPRES = currentPRES;
-    tft.fillRect(XFreqDispl, YFreqDispl + 20 , 239, 36, TFT_DARKCYAN);
+    tft.fillRect(XFreqDispl, YFreqDispl + 20 , 239, 36, TFT_BROWN);
     tft.setTextSize(1);
     tft.setTextDatum(BL_DATUM);
-    tft.setTextColor(TFT_WHITE, TFT_DARKCYAN );
+    tft.setTextColor(TFT_WHITE, TFT_BROWN );
     tft.drawString(String(preset[currentPRES].presetIdx, 2) + " MHz ", 5, 83);
     
     tftRusSetFont(T1516_T);
@@ -3299,7 +3307,7 @@ void loop() {
     if (currentBrightness < MaxBrightness) currentBrightness = MaxBrightness;
     if (currentBrightness > MinBrightness) currentBrightness = MinBrightness;
     previousBrightness = currentBrightness;
-    ledcWrite(LedChannelforTFT, currentBrightness);
+    //ledcWrite(LedChannelforTFT, currentBrightness);
   }
 
   if (currentAGCgain != previousAGCgain)
@@ -4086,13 +4094,13 @@ void DrawSmeter()  {
   tft.setTextColor(TFT_WHITE, TFT_GREY);
   tft.setTextDatum(BC_DATUM);
   for (int i = 0; i < 10; i++) {
-    tft.fillRect(Xsmtr + 15 + (i * 12), Ysmtr + 24, 4, 8, TFT_YELLOW);
+    tft.fillRect(Xsmtr + 15 + (i * 12), Ysmtr + 24, 4, 8, TFT_SKYBLUE);
     IStr = String(i);
     tft.setCursor((Xsmtr + 14 + (i * 12)), Ysmtr + 13);
     tft.print(i);
   }
   for (int i = 1; i < 7; i++) {
-    tft.fillRect((Xsmtr + 123 + (i * 16)), Ysmtr + 24, 4, 8, TFT_RED);
+    tft.fillRect((Xsmtr + 123 + (i * 16)), Ysmtr + 24, 4, 8, TFT_VIOLET);
     IStr = String(i * 10);
     tft.setCursor((Xsmtr + 117 + (i * 16)), Ysmtr + 13);
     if ((i == 2) or (i == 4) or (i == 6))  {
@@ -4100,8 +4108,8 @@ void DrawSmeter()  {
       tft.print(i * 10);
     }
   }
-  tft.fillRect(Xsmtr + 15, Ysmtr + 32 , 112, 4, TFT_YELLOW);
-  tft.fillRect(Xsmtr + 127, Ysmtr + 32 , 100, 4, TFT_RED);
+  tft.fillRect(Xsmtr + 15, Ysmtr + 32 , 112, 4, TFT_SKYBLUE);
+  tft.fillRect(Xsmtr + 127, Ysmtr + 32 , 100, 4, TFT_VIOLET);
   // end Smeter
 }
 
@@ -4242,7 +4250,7 @@ void checkRDS() {
     if (si4735.getRdsSync() && si4735.getRdsSyncFound() ) {
       stationName = si4735.getRdsText0A();
       tft.setTextSize(2);
-      if (PRESbut) tft.setTextColor(TFT_DARKCYAN, TFT_BLACK); else tft.setTextColor(TFT_VIOLET, TFT_BLACK);
+      if (PRESbut) tft.setTextColor(TFT_BROWN, TFT_BLACK); else tft.setTextColor(TFT_VIOLET, TFT_BLACK);
       tft.setTextDatum(BC_DATUM);
       if ( stationName != NULL )   showRDSStation();
     }
@@ -4259,7 +4267,7 @@ void Segment(String freq, String mask, int d) {
   spr.setTextPadding(0);
   spr.setFreeFont(&DSEG7_Classic_Mini_Regular_34);
   spr.setTextDatum(BR_DATUM);
-  spr.setTextColor(TFT_DARKCYAN);
+  spr.setTextColor(TFT_DARKGREY);
   spr.drawString(freq, 140, 38);
   spr.pushSprite(saverX, saverY);
  } else {
@@ -4289,7 +4297,7 @@ void Segment(String freq, String mask, int d) {
 #ifdef IhaveCrystal
     x = 110;
 #endif
-    spr.setTextColor(TFT_BROWN);
+    spr.setTextColor(TFT_DARKGREY);
     spr.drawString(mask, x, 38);
     spr.setTextColor(TFT_ORANGE);
     spr.drawString(freq, x, 38);
@@ -4299,7 +4307,7 @@ void Segment(String freq, String mask, int d) {
     if (RETRObut) {
       if (RETROband) x = 150; else x = 110;
     }
-    if (bfoOn) spr.setTextColor(TFT_BROWN); else spr.setTextColor(TFT_DARKCYAN);
+    if (bfoOn) spr.setTextColor(COLOR_INDICATOR_FREQ_BACK); else spr.setTextColor(COLOR_INDICATOR_FREQ_BACK);
     spr.drawString(mask, x, 38);
     if (PREtap) {
       spr.setTextColor(TFT_LIGTHYELLOW);
@@ -4431,10 +4439,10 @@ void FreqDraw (float freq, int d)  {
     tft.setTextDatum(BC_DATUM);
     tft.setTextSize(2);
     if (Saver) {
-      tft.setTextColor(TFT_DARKCYAN, TFT_BLACK);
+      tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
       tft.drawString("MHz", saverX + 165, saverY + 38);
     } else {
-      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.setTextColor(TFT_SKYBLUE, TFT_BLACK);
       tft.drawString("MHz", XFreqDispl + 215 + d, YFreqDispl + 60);
     }
   } else {
@@ -4444,7 +4452,7 @@ void FreqDraw (float freq, int d)  {
       tft.setTextDatum(BC_DATUM);
       tft.setTextSize(2);
       if (Saver) {
-        tft.setTextColor(TFT_DARKCYAN, TFT_BLACK);
+        tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
         tft.drawString("MHz", saverX + 165, saverY + 38);
       } else {
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -4456,7 +4464,7 @@ void FreqDraw (float freq, int d)  {
       tft.setTextDatum(BC_DATUM);
       tft.setTextSize(2);
       if (Saver) {
-        tft.setTextColor(TFT_DARKCYAN, TFT_BLACK);
+        tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
       tft.drawString("MHz", saverX + 165, saverY + 38);
       } else {
         tft.setTextColor(TFT_YELLOW, TFT_BLACK);
@@ -5028,7 +5036,7 @@ void drawRETRO() {
   }
   //volume
   tft.drawString("VOLUME", 0, 32);
-  tft.drawLine(46, 21, 127, 21, TFT_DARKCYAN);
+  tft.drawLine(46, 21, 127, 21, TFT_BROWN);
   drawRetroVol();
   //frequency units
   tft.setTextSize(2);
@@ -5221,7 +5229,7 @@ void drawRetroCity() {
             break;
           case 2:
           case 4:
-            col = TFT_DARKCYAN;
+            col = TFT_DARKGREY;
             break;
           default:
             col = TFT_WHITE;
@@ -5320,7 +5328,7 @@ void displMEMO() {
     } else {
       if (i) {
         if (presetBank) tft.fillRect(d, (i * 40) + 120, 240, 40, TFT_NAVY); else tft.fillRect(d, (i * 40) + 120, 240, 40, TFT_BLACK);
-      } else tft.fillRect(d, 120, 240, 40, TFT_DARKCYAN);
+      } else tft.fillRect(d, 120, 240, 40, TFT_DARKGREY);
     }
     if (presetBank) {
       if ((currentMemo + i) >= 0 and (currentMemo + i) <= lastPreset ) {
@@ -5337,11 +5345,11 @@ void displMEMO() {
         tftRusSetColor(TFT_CYAN, TFT_TRANS);
         if (preset[currentMemo + i].presetIdx < 109) tftRusPrint(String(preset[currentMemo + i].presetIdx, 2) + " MHz", d + 155, (i * 40) + 141); else tftRusPrint(String(preset[currentMemo + i].presetIdx, 0) + " KHz", d + 155, (i * 40) + 141);
   // BAND
-        if (i) tft.setTextColor(2031, TFT_NAVY); else tft.setTextColor(2031, TFT_DARKCYAN);
+        if (i) tft.setTextColor(2031, TFT_NAVY); else tft.setTextColor(2031, TFT_BROWN);
         tft.drawString(band[bandFreq(preset[currentMemo + i].presetIdx)].bandName, d + 175, (i * 40) + 137);
         tft.drawRect(d + 155, (i * 40) + 124, 39, 16, 2031);
   // MODE
-        if (i) tft.setTextColor(TFT_YELLOW, TFT_NAVY); else tft.setTextColor(TFT_YELLOW, TFT_DARKCYAN);
+        if (i) tft.setTextColor(TFT_YELLOW, TFT_NAVY); else tft.setTextColor(TFT_YELLOW, TFT_BROWN);
         tft.drawString(bandModeDesc[bandMode[bandFreq(preset[currentMemo + i].presetIdx)]], d + 215, (i * 40) + 137);
         tft.drawRect(d + 195, (i * 40) + 124, 39, 16, TFT_YELLOW);
       }
@@ -5372,11 +5380,11 @@ void displMEMO() {
             if (MemoBank[currentMemo + i].band == FM) tftRusPrint(String(float(MemoBank[currentMemo + i].freq) / 100, 2) + " MHz", d + 155, (i * 40) + 141); else tftRusPrint(String(MemoBank[currentMemo + i].freq) + " KHz", d + 155, (i * 40) + 141);
           }
   // BAND
-          if (i) tft.setTextColor(2031, TFT_BLACK); else tft.setTextColor(2031, TFT_DARKCYAN);
+          if (i) tft.setTextColor(2031, TFT_BLACK); else tft.setTextColor(2031, TFT_BROWN);
           if (MEMOadd and !i) tft.drawString(band[addMemoBand].bandName, d + 175, 137); else tft.drawString(band[(MemoBank[currentMemo + i].band & 0x1F)].bandName, d + 175, (i * 40) + 137);
           tft.drawRect(d + 155, (i * 40) + 124, 39, 16, 2031);
   // MODE
-          if (i) tft.setTextColor(TFT_YELLOW, TFT_BLACK); else tft.setTextColor(TFT_YELLOW, TFT_DARKCYAN);
+          if (i) tft.setTextColor(TFT_YELLOW, TFT_BLACK); else tft.setTextColor(TFT_YELLOW, TFT_BROWN);
           if (MEMOadd and !i) tft.drawString(bandModeDesc[addMemoMode], d + 215, 137); else tft.drawString(bandModeDesc[int(MemoBank[currentMemo + i].band / 32)], d + 215, (i * 40) + 137);
           tft.drawRect(d + 195, (i * 40) + 124, 39, 16, TFT_YELLOW);
         }
@@ -6073,7 +6081,7 @@ void screenRotate() {
     tft.setRotation(0);
     tft.setTouch(calDataV);
   } else {
-    tft.setRotation(3);
+    tft.setRotation(1);
     tft.setTouch(calDataH);
   }
 }
